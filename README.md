@@ -70,7 +70,9 @@ This project showcases expertise in several core embedded engineering domains:
 ## 5. Professional Impact
 > "This project demonstrates a disciplined approach to embedded systems design, prioritizing **determinism** and **data integrity**. By combining a custom scheduler with advanced DMA buffering, I have created a gateway capable of maintaining reliable cloud communication in challenging network environments."
 
-## How to Build the Project
+---
+
+# How to Build the Project
 
 Follow these steps to set up the development environment and open the project in STM32CubeIDE.
 
