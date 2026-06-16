@@ -180,3 +180,41 @@ This section explains how to flash the compiled firmware (ELF file) to the targe
     *   Monitor the log window for progress. A message confirming successful programming will appear upon completion.
 
 ![Imagen de erasing_programming_2](imgs/erasing_programming_2.png "erasing_programming_2")
+
+---
+
+## 1. Flow Chart: System Initialization and Main Loop
+
+The following flow chart describes the start-up sequence and the cyclic execution model of the firmware.
+
+### OPEN IMAGE: [diagrams-flow_chart](https://github.com/fhernando-m5/stm32-quectel-eg915-driver/blob/main/imgs/diagrams-flow_chart.svg?raw=1)
+
+![Imagen de diagrams-flow_chart](imgs/diagrams-flow_chart.svg?raw=1 "diagrams-flow_chart")
+
+### Flow Chart Explanation
+- **Initialization Phase**: The system starts by configuring the hardware (HAL, Clocks, UARTs). It then initializes a cyclic scheduler with four main tasks. The SIM module undergoes a rigorous initialization sequence (AT commands) to ensure LTE connectivity and MQTT broker connection.
+- **Main Loop**: The firmware enters an infinite loop where the scheduler is called continuously. The scheduler checks the elapsed time for each task and executes them if their period has reached.
+- **Cyclic Tasks**:
+    - **Task 1 (5ms)**: Checks for incoming MQTT messages from the SIM module and forwards them to the Control Board.
+    - **Task 2 (1min)**: Monitors the signal strength (RSSI) to ensure a stable connection.
+    - **Task 3 (6ms)**: Captures data from the Control Board and publishes it to the MQTT broker.
+    - **Task 4 (7min)**: Flushes any pending statistics stored in internal circular buffers.
+
+---
+
+## 2. Sequence Diagram: System Interactions
+
+The following sequence diagram illustrates the communication flow between the four main entities of the system.
+
+### OPEN IMAGE: [diagrams-sequence](https://github.com/fhernando-m5/stm32-quectel-eg915-driver/blob/main/imgs/diagrams-sequence.svg?raw=1)
+
+![Imagen de diagrams-sequence](imgs/diagrams-sequence.svg?raw=1 "diagrams-sequence")
+
+### Sequence Diagram Explanation
+- **Startup**: The MCU triggers the SIM module and waits for the `RDY` status.
+- **Handshake**: A series of AT commands are exchanged to configure the network and MQTT parameters. The phase ends when the MCU successfully connects to the broker and sends a `READY` message.
+- **Uplink (Green)**: When the Control Board sends data to the MCU, it is buffered and then sent to the SIM module using the `AT+QMTPUBEX` command. The SIM module handles the MQTT protocol details to publish the data to the broker.
+- **Downlink (Blue)**: Incoming MQTT messages arrive at the SIM module as Unsolicited Result Codes (URCs) starting with `+QMTRECV`. The MCU parses these and immediately forwards the payload to the Control Board.
+- **Maintenance (Yellow)**: The MCU periodically polls the SIM module for signal strength (`+CSQ`) and connection status to handle potential reconnections automatically.
+
+---
