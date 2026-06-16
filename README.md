@@ -22,6 +22,54 @@ The module is designed to perform three core functions:
 *   **Compiler:** arm-none-eabi-gcc
 *   **Target MCU:** STM32G0B0RETx
 
+# Project Summary: commQuectelv00
+
+## 1. Project Overview & Core Mission
+The **commQuectelv00** project is a high-reliability **Embedded Communication Gateway** developed for the STM32G0B0RE platform. Its primary function is to manage a Quectel Cellular Module (supporting LTE/GSM) to provide cloud connectivity (via MQTT) to a local host controller (referred to as the Control Board).
+
+The system acts as an intelligent bridge, abstracting the complexities of cellular network registration, socket management, and the MQTT protocol into a simplified interface for the local hardware.
+
+---
+
+## 2. Technical Architecture & Implementation
+The software is organized into a clean, **Layered Architecture** that separates low-level hardware control from high-level application logic:
+
+*   **Application Layer (`module_app_sim.c`):** Orchestrates the device lifecycle, including the initial boot sequence, MQTT session persistence, and the routing of telemetry data.
+*   **Driver Layer (`module_sim.c` / `atc.c`):** Implements a robust **AT Command Engine**. It manages asynchronous responses from the cellular module, parses Unsolicited Result Codes (URCs), and handles network-specific errors (CME Errors).
+*   **Hardware Layer (STM32 HAL):** Utilizes standard STM32 peripherals (UART, DMA, GPIO, Timers) to interface with the physical hardware.
+
+---
+
+## 3. Key Engineering Features
+
+### **Deterministic Task Scheduling**
+The project implements a **Cyclic Executive Scheduler** (`cyclic_executive_sch.c`). This non-preemptive model manages multiple tasks (such as RSSI monitoring, payload processing, and statistics transmission) at fixed millisecond intervals, ensuring predictable system behavior without the overhead of an RTOS.
+
+### **Resilient Data Handling**
+*   **Non-Blocking I/O:** The system uses **UART with DMA and Idle Line Detection** to receive variable-length messages from the cellular module without stalling the CPU.
+*   **Buffer Management:** Multiple **Circular Buffers** are employed to prevent data loss. For instance, if a network drop occurs, telemetry statistics are stored in a "Remains Buffer" and re-transmitted automatically once the connection is restored.
+
+### **Fault Tolerance & Reliability**
+The firmware is designed for unattended operation in the field:
+- **Automatic Reconnection:** Implements a multi-tiered strategy to recover from MQTT or network drops.
+- **Hardware Recovery:** Includes logic to hard-reset the cellular module or the entire MCU via the `Error_Handler` if a critical, unrecoverable state is detected.
+
+---
+
+## 4. Technical Skills Demonstrated
+This project showcases expertise in several core embedded engineering domains:
+
+-   **Embedded C:** Advanced use of structures, pointers for task management, and volatile variables for interrupt safety.
+-   **STM32 Peripherals:** Expertise in UART (DMA/IT), Timers, and GPIO control.
+-   **Cellular Connectivity:** Mastery of Quectel AT commands for TCP/IP and MQTT stacks.
+-   **IoT Protocols:** Implementation of **MQTT** features including Publish/Subscribe, Quality of Service (QoS) management, and Last Will and Testament (LWT) messages.
+-   **System Design:** Experience in building state machines for complex boot sequences and network-aware applications.
+
+---
+
+## 5. Professional Impact
+> "This project demonstrates a disciplined approach to embedded systems design, prioritizing **determinism** and **data integrity**. By combining a custom scheduler with advanced DMA buffering, I have created a gateway capable of maintaining reliable cloud communication in challenging network environments."
+
 ## How to Build the Project
 
 Follow these steps to set up the development environment and open the project in STM32CubeIDE.
